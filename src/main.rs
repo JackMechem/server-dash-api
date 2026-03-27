@@ -2,6 +2,7 @@ use axum::{Router, body::Body, response::Json, routing::get};
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use sysinfo::{Components, Disks, Networks, System};
+use std::path::Path;
 use tokio::process::Command;
 
 mod models;
@@ -41,19 +42,27 @@ async fn get_stats() -> Json<models::SystemStats> {
         cores: sys.cpus().len(),
     };
 
-    // Disk (MB)
+    // Disk (Fixed)
     let disks = Disks::new_with_refreshed_list();
-    let total_disk: u64 = disks.iter().map(|d: &sysinfo::Disk| d.total_space()).sum();
-    let available_disk: u64 = disks
-        .iter()
-        .map(|d: &sysinfo::Disk| d.available_space())
-        .sum();
-    let used_disk = total_disk - available_disk;
-    let disk = models::DiskStats {
-        total: total_disk / 1_000_000,
-        used: used_disk / 1_000_000,
-        available: available_disk / 1_000_000,
-        percent: (used_disk as f64 / total_disk as f64 * 100.0) as u64,
+
+    // Find only the root partition
+    let root_disk = disks.iter().find(|d| d.mount_point() == std::path::Path::new("/"));
+
+    let disk = if let Some(d) = root_disk {
+        let total_bytes = d.total_space();
+        let available_bytes = d.available_space();
+        let used_bytes = total_bytes - available_bytes;
+        let mb_factor = 1024 * 1024;
+
+        models::DiskStats {
+            total: total_bytes / mb_factor,
+            used: used_bytes / mb_factor,
+            available: available_bytes / mb_factor,
+            percent: (used_bytes as f64 / total_bytes as f64 * 100.0) as u64,
+        }
+    } else {
+        // Fallback if "/" isn't found (prevents crash)
+        models::DiskStats { total: 0, used: 0, available: 0, percent: 0 }
     };
 
     // Uptime
