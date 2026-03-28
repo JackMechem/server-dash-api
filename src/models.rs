@@ -1,5 +1,40 @@
+use axum::http::StatusCode;
+use axum::response::Json;
 use serde::Serialize;
 use std::collections::HashMap;
+
+#[derive(Serialize)]
+pub struct ActionResponse {
+    pub success: bool,
+    pub message: String,
+    pub stdout: String,
+    pub stderr: String,
+}
+
+impl ActionResponse {
+    pub fn ok(message: String) -> (StatusCode, Json<Self>) {
+        (
+            StatusCode::OK,
+            Json(Self {
+                success: true,
+                message,
+                stdout: String::new(),
+                stderr: String::new(),
+            }),
+        )
+    }
+    pub fn err(status: StatusCode, message: &str) -> (StatusCode, Json<Self>) {
+        (
+            status,
+            Json(Self {
+                success: false,
+                message: message.to_string(),
+                stdout: String::new(),
+                stderr: String::new(),
+            }),
+        )
+    }
+}
 
 #[derive(Serialize)]
 pub struct SystemStats {
