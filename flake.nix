@@ -94,7 +94,7 @@
 
                         systemd.tmpfiles.rules = [
                             "d /var/lib/server-dash-api 0750 server-dash-api server-dash-api -"
-                            "d /var/lib/server-dash-api/google-auth 0750 server-dash-api server-dash-api -"
+                            "d /var/lib/server-dash-api/google-auth 0755 server-dash-api server-dash-api -"
                         ];
 
                         security.polkit.extraConfig = ''
