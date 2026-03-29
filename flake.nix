@@ -38,10 +38,9 @@
                     linux-pam
                     libclang
                     glibc.dev
+                    gnumake
                 ];
-            in
-            {
-                packages.default = pkgs.rustPlatform.buildRustPackage {
+                package = pkgs.rustPlatform.buildRustPackage {
                     pname = "server-dash-api";
                     version = "0.1.0";
                     src = ./.;
@@ -52,6 +51,9 @@
                     LIBCLANG_PATH = "${pkgs.libclang.lib}/lib";
                     BINDGEN_EXTRA_CLANG_ARGS = "-I${pkgs.linux-pam}/include -I${pkgs.glibc.dev}/include";
                 };
+            in
+            {
+                packages.default = package;
                 devShells.default = pkgs.mkShell {
                     inherit nativeBuildInputs buildInputs;
                     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
@@ -80,6 +82,11 @@
                 {
                     options.services.server-dash-api = {
                         enable = lib.mkEnableOption "server-dash-api system stats API";
+                        useNixBuild = lib.mkOption {
+                            type = lib.types.bool;
+                            default = false;
+                            description = "Build the binary via Nix instead of using a manually deployed binary";
+                        };
                     };
 
                     config = lib.mkIf config.services.server-dash-api.enable {
@@ -116,8 +123,13 @@
                                 User = "server-dash-api";
                                 Group = "server-dash-api";
                                 SupplementaryGroups = [ "shadow" ];
-                                ExecStart = "${self.packages.${pkgs.system}.default}/bin/server-dash-api";
-                                Restart = "always";
+                                ExecStart =
+                                    if config.services.server-dash-api.useNixBuild then
+                                        "${self.packages.${pkgs.system}.default}/bin/server-dash-api"
+                                    else
+                                        "/var/lib/server-dash-api/server-dash-api";
+                                Restart = "on-failure";
+                                RestartSec = "10s";
                                 StateDirectory = "server-dash-api";
                                 Environment = [
                                     "RUST_LOG=info"
