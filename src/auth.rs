@@ -16,7 +16,7 @@ static JWT_SECRET: OnceLock<String> = OnceLock::new();
 const ROTATION_DAYS: u64 = 7;
 
 fn secret_path() -> PathBuf {
-    PathBuf::from("/home/jack/.local/share/sysapi/jwt_secret")
+    PathBuf::from("/var/lib/server-dash-api/jwt_secret")
 }
 
 fn generate_secret() -> String {
