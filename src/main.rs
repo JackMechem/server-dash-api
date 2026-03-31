@@ -28,6 +28,7 @@ async fn main() {
             get(routes::services::service_logs),
         )
         .route("/system/reboot", post(routes::system::system_reboot))
+        .route("/system/shutdown", post(routes::system::system_shutdown))
         .route_layer(middleware::from_fn(auth::require_auth));
 
     let app = Router::new()

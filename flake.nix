@@ -107,7 +107,8 @@
                         security.polkit.extraConfig = ''
                             polkit.addRule(function(action, subject) {
                                 if ((action.id == "org.freedesktop.systemd1.manage-units" ||
-                                     action.id == "org.freedesktop.login1.reboot") &&
+                                     action.id == "org.freedesktop.login1.reboot" ||
+                                     action.id == "org.freedesktop.login1.power-off") &&
                                     subject.user == "server-dash-api") {
                                     return polkit.Result.YES;
                                 }
