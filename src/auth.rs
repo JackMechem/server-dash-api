@@ -15,7 +15,7 @@ use yescrypt::{PasswordHash, PasswordVerifier, Yescrypt};
 static JWT_SECRET: OnceLock<String> = OnceLock::new();
 
 const ROTATION_DAYS: u64 = 7;
-const TOTP_SECRET_PATH: &str = "/var/lib/server-dash-api/google-auth/jack";
+const TOTP_SECRET_PATH: &str = "/var/lib/server-dash-api/google-auth";
 
 fn secret_path() -> PathBuf {
     PathBuf::from("/var/lib/server-dash-api/jwt_secret")
@@ -147,8 +147,9 @@ fn verify_shadow_hash(password: &str, hash: &str) -> bool {
         .is_ok()
 }
 
-fn verify_totp(totp_code: &str) -> bool {
-    let secret_file = match std::fs::read_to_string(TOTP_SECRET_PATH) {
+fn verify_totp(username: &str, totp_code: &str) -> bool {
+    let path = PathBuf::from(TOTP_SECRET_PATH).join(username);
+    let secret_file = match std::fs::read_to_string(&path) {
         Ok(f) => f,
         Err(e) => {
             println!("Failed to read TOTP secret: {}", e);
@@ -165,7 +166,7 @@ fn verify_totp(totp_code: &str) -> bool {
         30,
         Secret::Encoded(secret_b32).to_bytes().unwrap(),
         None,
-        "jack".to_string(),
+        username.to_string(),
     ) {
         Ok(t) => t,
         Err(e) => {
@@ -178,7 +179,7 @@ fn verify_totp(totp_code: &str) -> bool {
 }
 
 pub fn verify_system_credentials(username: &str, password: &str, totp: &str) -> bool {
-    verify_password(username, password) && verify_totp(totp)
+    verify_password(username, password) && verify_totp(username, totp)
 }
 
 pub async fn require_auth(headers: HeaderMap, request: Request<Body>, next: Next) -> Response {
