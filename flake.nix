@@ -108,7 +108,14 @@
                             polkit.addRule(function(action, subject) {
                                 if ((action.id == "org.freedesktop.systemd1.manage-units" ||
                                      action.id == "org.freedesktop.login1.reboot" ||
-                                     action.id == "org.freedesktop.login1.power-off") &&
+                                     action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+                                     action.id == "org.freedesktop.login1.reboot-ignore-inhibit" ||
+                                     action.id == "org.freedesktop.login1.power-off" ||
+                                     action.id == "org.freedesktop.login1.power-off-multiple-sessions" ||
+                                     action.id == "org.freedesktop.login1.power-off-ignore-inhibit" ||
+                                     action.id == "org.freedesktop.login1.halt" ||
+                                     action.id == "org.freedesktop.login1.halt-multiple-sessions" ||
+                                     action.id == "org.freedesktop.login1.halt-ignore-inhibit") &&
                                     subject.user == "server-dash-api") {
                                     return polkit.Result.YES;
                                 }
